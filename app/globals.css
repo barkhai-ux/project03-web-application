@@ -1,26 +1,386 @@
 @import "tailwindcss";
 
+/* ──────────────────────────────────────────────────────────────────
+   Final — design tokens (warm, cozy, glassy)
+   ────────────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Sand palette */
+  --sand-50:  #fbf6ee;
+  --sand-100: #f6ecdc;
+  --sand-200: #ecdcc1;
+  --sand-300: #dcc59a;
+
+  /* Ink */
+  --ink-900: #1a1612;
+  --ink-700: #3a3329;
+  --ink-500: #6b6357;
+  --ink-400: #918878;
+  --ink-300: #b6ad9d;
+
+  /* Paper */
+  --paper:   #ffffff;
+  --paper-2: #fbf8f3;
+
+  /* Accents */
+  --butter:    #f5d96b;
+  --butter-2:  #f7c948;
+  --moss:      #2d5a3d;
+  --moss-2:    #3e7a52;
+  --terra:     #c4623d;
+  --terra-2:   #e57347;
+  --mint:      #d6efde;
+  --mint-ink:  #1f6b3a;
+  --lilac:     #e5dcf3;
+  --lilac-ink: #5a4a8a;
+
+  --line:    rgba(26, 22, 18, 0.08);
+  --line-2:  rgba(26, 22, 18, 0.14);
+
+  --shadow-card:
+    0 1px 0 rgba(255,255,255,0.6) inset,
+    0 10px 30px -12px rgba(60, 40, 20, 0.18),
+    0 2px 6px -2px rgba(60,40,20,0.08);
+  --shadow-soft: 0 6px 20px -10px rgba(60, 40, 20, 0.25);
+  --shadow-shell:
+    0 1px 0 rgba(255,255,255,0.7) inset,
+    0 30px 60px -20px rgba(60, 40, 20, 0.45),
+    0 12px 24px -10px rgba(60, 40, 20, 0.25);
+
+  --radius-card: 22px;
+  --radius-pill: 999px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-sand-50:  var(--sand-50);
+  --color-sand-100: var(--sand-100);
+  --color-sand-200: var(--sand-200);
+  --color-sand-300: var(--sand-300);
+  --color-ink-900: var(--ink-900);
+  --color-ink-700: var(--ink-700);
+  --color-ink-500: var(--ink-500);
+  --color-ink-400: var(--ink-400);
+  --color-ink-300: var(--ink-300);
+  --color-paper:   var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-butter:  var(--butter);
+  --color-moss:    var(--moss);
+  --color-terra:   var(--terra);
+
+  --color-background: var(--sand-50);
+  --color-foreground: var(--ink-900);
+
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-sans:  var(--font-geist), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ──────────────────────────────────────────────────────────────────
+   Base
+   ────────────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--ink-900);
+  background: #c9bfb1;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+
+::selection {
+  background: var(--ink-900);
+  color: var(--sand-50);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.18) transparent;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   App background — radial sand gradient behind everything
+   ────────────────────────────────────────────────────────────────── */
+.app-bg {
+  position: fixed; inset: 0;
+  z-index: -1;
+  background: radial-gradient(80% 60% at 50% 0%, #e9dccb 0%, #d6c8b3 45%, #b9ad9b 100%);
+}
+
+/* The cozy "shell" — a rounded paper card stage */
+.shell {
+  width: min(1360px, 100%);
+  border-radius: 28px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fbf3e6 0%, #f6ead4 38%, #f1dec0 100%);
+  box-shadow: var(--shadow-shell);
+  isolation: isolate;
+}
+
+.hero-photo {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('https://images.unsplash.com/photo-1448375240586-882707db888b?w=1800&q=80&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center 70%;
+  opacity: 0.55;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, transparent 38%, #000 62%, #000 100%);
+          mask-image: linear-gradient(180deg, transparent 0%, transparent 38%, #000 62%, #000 100%);
+  filter: saturate(0.85) contrast(0.95);
+  pointer-events: none;
+}
+
+.hero-tint {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(251,243,230,0.0) 30%, rgba(241,222,192,0.55) 70%, rgba(241,222,192,0.85) 100%),
+    radial-gradient(60% 40% at 50% 100%, rgba(214, 188, 145, 0.45), transparent 70%);
+}
+
+.shell-inner {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  min-height: 100%;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Typography utilities
+   ────────────────────────────────────────────────────────────────── */
+@utility serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+@utility serif-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+@utility small-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+@utility ink { color: var(--ink-900); }
+@utility ink-soft { color: var(--ink-500); }
+@utility ink-faint { color: var(--ink-400); }
+
+/* ──────────────────────────────────────────────────────────────────
+   Cards
+   ────────────────────────────────────────────────────────────────── */
+@utility card {
+  background: rgba(255, 253, 248, 0.92);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+@utility card-solid {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Pills, buttons, switches
+   ────────────────────────────────────────────────────────────────── */
+@utility pill-group {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid var(--line);
+  padding: 5px;
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(6px);
+  gap: 6px;
+}
+
+.btn-dark {
+  background: var(--ink-900);
+  color: #fbf3e6;
+  border: none;
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.12s, box-shadow 0.12s, opacity 0.12s;
+}
+.btn-dark:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -8px rgba(0,0,0,0.35);
+}
+.btn-dark:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-dark .star { color: var(--butter); display: inline-flex; }
+
+.btn-soft {
+  background: rgba(255,255,255,0.9);
+  color: var(--ink-900);
+  border: 1px solid var(--line);
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.12s, background 0.12s;
+}
+.btn-soft:hover:not(:disabled) {
+  background: white;
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background: var(--terra);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.btn-accent:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -8px rgba(196, 98, 61, 0.55);
+}
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--ink-900); color: #fbf3e6;
+  border: none; cursor: pointer;
+  position: relative;
+}
+.icon-btn .dot {
+  position: absolute; top: 7px; right: 9px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--terra-2); border: 1.5px solid var(--ink-900);
+}
+
+.switch {
+  width: 38px; height: 22px; border-radius: 99px;
+  background: var(--sand-200); position: relative; cursor: pointer;
+  transition: background 0.2s; flex-shrink: 0;
+  border: none; padding: 0;
+}
+.switch::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+.switch.on { background: var(--moss); }
+.switch.on::after { transform: translateX(16px); }
+
+/* ──────────────────────────────────────────────────────────────────
+   Tags
+   ────────────────────────────────────────────────────────────────── */
+.tag {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.tag.meeting  { background: var(--mint); color: var(--mint-ink); }
+.tag.task     { background: var(--sand-100); color: var(--ink-700); border: 1px solid var(--line); }
+.tag.priority { background: var(--terra); color: white; }
+.tag.voice    { background: var(--lilac); color: var(--lilac-ink); }
+.tag.streak   { background: #ffe9d9; color: var(--terra); }
+
+/* ──────────────────────────────────────────────────────────────────
+   Heatmap palette
+   ────────────────────────────────────────────────────────────────── */
+.heat    { background: rgba(0,0,0,0.05); }
+.heat.l1 { background: #e9dcc1; }
+.heat.l2 { background: #d8b97a; }
+.heat.l3 { background: #c69441; }
+.heat.l4 { background: var(--moss-2); }
+.heat.l5 { background: var(--moss); }
+
+/* ──────────────────────────────────────────────────────────────────
+   Form primitives
+   ────────────────────────────────────────────────────────────────── */
+.field {
+  display: block;
+  width: 100%;
+  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--ink-900);
+  outline: none;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+.field::placeholder { color: var(--ink-400); }
+.field:focus {
+  border-color: var(--ink-900);
+  background: white;
+}
+.field-select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink-500) 50%),
+    linear-gradient(135deg, var(--ink-500) 50%, transparent 50%);
+  background-position: calc(100% - 16px) center, calc(100% - 11px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink-900);
+  outline-offset: 2px;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Motion
+   ────────────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes stamp {
+  0%   { transform: scale(1.6) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(0.95) rotate(-2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@utility animate-fade-up { animation: fadeUp 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@utility animate-fade-in { animation: fadeIn 500ms ease-out both; }
+@utility animate-stamp   { animation: stamp 220ms cubic-bezier(0.18, 0.89, 0.32, 1.28) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

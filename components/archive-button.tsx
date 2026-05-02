@@ -21,9 +21,9 @@ export function ArchiveButton({
           else await archiveHabit(habitId);
         })
       }
-      className="text-xs text-zinc-500 hover:text-foreground disabled:opacity-50 dark:text-zinc-400"
+      className="serif-italic text-sm text-[var(--ink-400)] hover:text-[var(--ink-900)] hover:underline disabled:opacity-50"
     >
-      {archived ? "Restore" : "Archive"}
+      {archived ? "restore" : "archive"}
     </button>
   );
 }

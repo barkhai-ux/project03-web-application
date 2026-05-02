@@ -4,14 +4,14 @@ import { useActionState } from "react";
 import { createHabit, type ActionResult } from "@/app/actions/habits";
 
 const COLORS = [
-  "#10b981",
-  "#3b82f6",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
-  "#06b6d4",
-  "#84cc16",
+  "#c4623d", // terra
+  "#3e7a52", // moss
+  "#1f4e7a", // ink blue
+  "#9c2a2a", // ox blood
+  "#d39c2b", // mustard
+  "#5a4a8a", // lilac
+  "#a25b8a", // mauve
+  "#2a6b6b", // teal
 ];
 
 export function HabitForm() {
@@ -21,24 +21,27 @@ export function HabitForm() {
   );
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="space-y-5">
       <div>
-        <label className="mb-1 block text-sm font-medium">Name</label>
+        <label className="small-caps text-[var(--ink-400)]" htmlFor="name">
+          Title
+        </label>
         <input
+          id="name"
           type="text"
           name="name"
           required
           maxLength={80}
-          placeholder="e.g. Read 20 pages"
-          className="w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700"
+          placeholder="e.g. Morning meditation"
+          className="field mt-2"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium">Color</label>
-        <div className="flex flex-wrap gap-2">
+        <label className="small-caps text-[var(--ink-400)]">Ink</label>
+        <div className="mt-3 flex flex-wrap gap-3">
           {COLORS.map((c, i) => (
-            <label key={c} className="cursor-pointer">
+            <label key={c} className="cursor-pointer" title={c}>
               <input
                 type="radio"
                 name="color"
@@ -47,7 +50,7 @@ export function HabitForm() {
                 className="peer sr-only"
               />
               <span
-                className="block h-7 w-7 rounded-full border-2 border-transparent transition-all peer-checked:border-zinc-900 dark:peer-checked:border-zinc-100"
+                className="block h-7 w-7 rounded-full border-2 border-transparent transition-all peer-checked:border-[var(--ink-900)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--terra)]"
                 style={{ backgroundColor: c }}
               />
             </label>
@@ -57,25 +60,31 @@ export function HabitForm() {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-1 block text-sm font-medium">Period</label>
+          <label className="small-caps text-[var(--ink-400)]" htmlFor="period">
+            Cadence
+          </label>
           <select
+            id="period"
             name="period"
             defaultValue="day"
-            className="w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700"
+            className="field field-select mt-2"
           >
             <option value="day">Daily</option>
             <option value="week">Weekly</option>
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Target</label>
+          <label className="small-caps text-[var(--ink-400)]" htmlFor="target">
+            Target
+          </label>
           <input
+            id="target"
             type="number"
             name="target_per_period"
             min={1}
             max={100}
             defaultValue={1}
-            className="w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700"
+            className="field mt-2"
           />
         </div>
       </div>
@@ -83,13 +92,13 @@ export function HabitForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-foreground px-3 py-2 text-sm text-background transition-colors hover:opacity-90 disabled:opacity-50"
+        className="btn-dark w-full justify-center"
       >
-        {pending ? "Creating…" : "Create habit"}
+        {pending ? "Recording…" : "Add habit"}
       </button>
 
       {state?.ok === false && (
-        <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
+        <p className="serif-italic text-sm text-[var(--terra)]">{state.error}</p>
       )}
     </form>
   );
