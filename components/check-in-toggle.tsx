@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useState } from "react";
+import { startTransition, useOptimistic } from "react";
 import { Check } from "lucide-react";
 import { toggleCheckInToday } from "@/app/actions/check-ins";
 
@@ -12,40 +12,39 @@ interface Props {
 }
 
 export function CheckInToggle({ habitId, done, color, size = "md" }: Props) {
-  const [pending, startTransition] = useTransition();
-  const [justChecked, setJustChecked] = useState(false);
+  const [optimisticDone, applyOptimistic] = useOptimistic<boolean, boolean>(
+    done,
+    (_, next) => next,
+  );
   const dim = size === "sm" ? 18 : 22;
   const iconSize = size === "sm" ? 11 : 12;
   const stroke = 1.5;
 
+  function onClick() {
+    const next = !optimisticDone;
+    startTransition(async () => {
+      applyOptimistic(next);
+      await toggleCheckInToday(habitId);
+    });
+  }
+
   return (
     <button
       type="button"
-      aria-pressed={done}
-      aria-label={done ? "Undo check-in" : "Mark complete"}
-      disabled={pending}
-      onClick={() =>
-        startTransition(async () => {
-          if (!done) setJustChecked(true);
-          await toggleCheckInToday(habitId);
-          setTimeout(() => setJustChecked(false), 240);
-        })
-      }
-      className="flex-shrink-0 grid place-items-center rounded-full transition-all duration-200 disabled:opacity-60"
+      aria-pressed={optimisticDone}
+      aria-label={optimisticDone ? "Undo check-in" : "Mark complete"}
+      onClick={onClick}
+      className="flex-shrink-0 grid place-items-center rounded-full transition-all duration-200"
       style={{
         width: dim,
         height: dim,
-        background: done ? color : "white",
-        border: `${stroke}px solid ${done ? color : "var(--ink-300)"}`,
-        color: done ? "white" : "transparent",
+        background: optimisticDone ? color : "white",
+        border: `${stroke}px solid ${optimisticDone ? color : "var(--ink-300)"}`,
+        color: optimisticDone ? "white" : "transparent",
       }}
     >
-      {done && (
-        <Check
-          size={iconSize}
-          strokeWidth={3}
-          className={justChecked ? "animate-stamp" : ""}
-        />
+      {optimisticDone && (
+        <Check size={iconSize} strokeWidth={3} className="animate-stamp" />
       )}
     </button>
   );

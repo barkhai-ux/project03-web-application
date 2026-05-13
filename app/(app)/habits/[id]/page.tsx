@@ -17,18 +17,24 @@ export default async function HabitDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: habit } = await supabase
-    .from("habits")
-    .select("id, name, color, period, target_per_period, is_public, archived_at")
-    .eq("id", id)
-    .maybeSingle();
+  const [habitRes, profileRes, siblingsRes] = await Promise.all([
+    supabase
+      .from("habits")
+      .select("id, name, color, period, target_per_period, is_public, archived_at")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase.from("profiles").select("timezone").single(),
+    supabase
+      .from("habits")
+      .select("id, name, color")
+      .is("archived_at", null)
+      .order("created_at", { ascending: true }),
+  ]);
 
+  const habit = habitRes.data;
   if (!habit) notFound();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("timezone")
-    .single();
+  const profile = profileRes.data;
   const tz = profile?.timezone ?? "UTC";
   const today = todayInTz(tz);
   const horizon = addDays(today, -370);
@@ -55,12 +61,7 @@ export default async function HabitDetailPage({
   const doneToday = todayCount >= habit.target_per_period;
   const isCounter = habit.target_per_period > 1;
 
-  // Sibling list for picker
-  const { data: siblings } = await supabase
-    .from("habits")
-    .select("id, name, color")
-    .is("archived_at", null)
-    .order("created_at", { ascending: true });
+  const siblings = siblingsRes.data;
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-7 pb-7 pt-2 animate-fade-up">

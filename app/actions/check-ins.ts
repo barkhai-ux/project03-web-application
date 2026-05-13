@@ -5,29 +5,30 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { todayInTz } from "@/lib/dates";
 
-async function userTimezone(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return "UTC";
-  const { data } = await supabase
-    .from("profiles")
-    .select("timezone")
-    .eq("id", user.id)
-    .maybeSingle();
-  return data?.timezone ?? "UTC";
-}
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
-export async function toggleCheckInToday(habitId: string): Promise<void> {
+async function authAndToday(): Promise<{
+  supabase: SupabaseClient;
+  userId: string;
+  today: string;
+}> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const tz = await userTimezone();
-  const today = todayInTz(tz);
+  const { data } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", user.id)
+    .maybeSingle();
+  const tz = data?.timezone ?? "UTC";
+  return { supabase, userId: user.id, today: todayInTz(tz) };
+}
+
+export async function toggleCheckInToday(habitId: string): Promise<void> {
+  const { supabase, userId, today } = await authAndToday();
 
   const { data: existing } = await supabase
     .from("check_ins")
@@ -41,7 +42,7 @@ export async function toggleCheckInToday(habitId: string): Promise<void> {
   } else {
     await supabase.from("check_ins").insert({
       habit_id: habitId,
-      user_id: user.id,
+      user_id: userId,
       date: today,
       count: 1,
     });
@@ -52,14 +53,7 @@ export async function toggleCheckInToday(habitId: string): Promise<void> {
 }
 
 export async function incrementCheckInToday(habitId: string): Promise<void> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const tz = await userTimezone();
-  const today = todayInTz(tz);
+  const { supabase, userId, today } = await authAndToday();
 
   const { data: existing } = await supabase
     .from("check_ins")
@@ -76,7 +70,7 @@ export async function incrementCheckInToday(habitId: string): Promise<void> {
   } else {
     await supabase.from("check_ins").insert({
       habit_id: habitId,
-      user_id: user.id,
+      user_id: userId,
       date: today,
       count: 1,
     });
@@ -87,14 +81,7 @@ export async function incrementCheckInToday(habitId: string): Promise<void> {
 }
 
 export async function decrementCheckInToday(habitId: string): Promise<void> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const tz = await userTimezone();
-  const today = todayInTz(tz);
+  const { supabase, today } = await authAndToday();
 
   const { data: existing } = await supabase
     .from("check_ins")

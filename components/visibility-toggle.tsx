@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { startTransition, useOptimistic } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { setHabitVisibility } from "@/app/actions/habits";
 
@@ -11,21 +11,28 @@ export function VisibilityToggle({
   habitId: string;
   isPublic: boolean;
 }) {
-  const [pending, startTransition] = useTransition();
+  const [optimistic, applyOptimistic] = useOptimistic<boolean, boolean>(
+    isPublic,
+    (_, next) => next,
+  );
+
+  function onClick() {
+    const next = !optimistic;
+    startTransition(async () => {
+      applyOptimistic(next);
+      await setHabitVisibility(habitId, next);
+    });
+  }
+
   return (
     <button
       type="button"
-      disabled={pending}
-      title={isPublic ? "Visible on your public folio" : "Private"}
-      onClick={() =>
-        startTransition(async () => {
-          await setHabitVisibility(habitId, !isPublic);
-        })
-      }
-      className="inline-flex items-center gap-1.5 serif-italic text-sm text-[var(--ink-400)] hover:text-[var(--ink-900)] disabled:opacity-50"
+      title={optimistic ? "Visible on your public folio" : "Private"}
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 serif-italic text-sm text-[var(--ink-400)] hover:text-[var(--ink-900)]"
     >
-      {isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
-      {isPublic ? "public" : "private"}
+      {optimistic ? <Eye size={14} /> : <EyeOff size={14} />}
+      {optimistic ? "public" : "private"}
     </button>
   );
 }

@@ -13,20 +13,33 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("timezone, display_name")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [profileRes, habitsRes, digestRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("timezone, display_name")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("habits")
+      .select("id, name, color, period, target_per_period")
+      .is("archived_at", null)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("digests")
+      .select(
+        "for_date, completion_pct, done_count, total_count, longest_streak, message",
+      )
+      .eq("user_id", user.id)
+      .order("for_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  const profile = profileRes.data;
+  const habits = habitsRes.data;
+  const latestDigest = digestRes.data;
   const tz = profile?.timezone ?? "UTC";
   const today = todayInTz(tz);
   const horizon = addDays(today, -370);
-
-  const { data: habits } = await supabase
-    .from("habits")
-    .select("id, name, color, period, target_per_period")
-    .is("archived_at", null)
-    .order("created_at", { ascending: true });
 
   const habitIds = (habits ?? []).map((h) => h.id);
   const { data: checkIns } = habitIds.length
@@ -68,16 +81,6 @@ export default async function DashboardPage() {
 
   const totalCheckIns = (checkIns ?? []).length;
   const mindfulHours = Math.round(((checkIns ?? []).length * 15) / 60);
-
-  const { data: latestDigest } = await supabase
-    .from("digests")
-    .select(
-      "for_date, completion_pct, done_count, total_count, longest_streak, message",
-    )
-    .eq("user_id", user.id)
-    .order("for_date", { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
   const firstName =
     profile?.display_name?.split(" ")[0] ??

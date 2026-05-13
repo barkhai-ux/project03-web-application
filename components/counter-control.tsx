@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { startTransition, useOptimistic } from "react";
 import { Minus, Plus } from "lucide-react";
 import {
   decrementCheckInToday,
@@ -24,21 +24,27 @@ export function CounterControl({
   unit,
   size = "md",
 }: Props) {
-  const [pending, startTransition] = useTransition();
-  const pct = Math.min(100, Math.round((count / target) * 100));
-  const done = count >= target;
+  const [optimistic, applyOptimistic] = useOptimistic<number, number>(
+    count,
+    (state, delta) => Math.max(0, state + delta),
+  );
+
+  const pct = Math.min(100, Math.round((optimistic / target) * 100));
+  const done = optimistic >= target;
 
   const btnDim = size === "sm" ? 26 : 30;
   const iconSize = size === "sm" ? 12 : 14;
 
   function inc() {
     startTransition(async () => {
+      applyOptimistic(1);
       await incrementCheckInToday(habitId);
     });
   }
   function dec() {
-    if (count <= 0) return;
+    if (optimistic <= 0) return;
     startTransition(async () => {
+      applyOptimistic(-1);
       await decrementCheckInToday(habitId);
     });
   }
@@ -49,7 +55,7 @@ export function CounterControl({
         <button
           type="button"
           onClick={dec}
-          disabled={pending || count <= 0}
+          disabled={optimistic <= 0}
           aria-label="Decrease"
           className="grid place-items-center rounded-full border bg-white text-[var(--ink-700)] hover:text-[var(--ink-900)] disabled:opacity-30 transition-colors"
           style={{
@@ -62,7 +68,7 @@ export function CounterControl({
         </button>
 
         <div className="tabular text-[14px] min-w-[44px] text-center font-medium">
-          <span style={{ color: done ? color : undefined }}>{count}</span>
+          <span style={{ color: done ? color : undefined }}>{optimistic}</span>
           <span className="text-[var(--ink-400)]"> / {target}</span>
           {unit && (
             <span className="text-[11px] text-[var(--ink-400)] ml-1 small-caps">
@@ -74,9 +80,8 @@ export function CounterControl({
         <button
           type="button"
           onClick={inc}
-          disabled={pending}
           aria-label="Increase"
-          className="grid place-items-center rounded-full text-white disabled:opacity-60 transition-colors"
+          className="grid place-items-center rounded-full text-white transition-colors"
           style={{
             width: btnDim,
             height: btnDim,

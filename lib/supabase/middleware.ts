@@ -2,6 +2,16 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const isPublicRoute =
+    pathname === "/" ||
+    pathname.startsWith("/u/") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/auth");
+
+  // Public routes don't need the session refresh round-trip.
+  if (isPublicRoute) return NextResponse.next({ request });
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -25,16 +35,11 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Refreshes the session if expired. Required by Supabase SSR.
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/auth");
-  const isPublicRoute = pathname === "/" || pathname.startsWith("/u/");
-
-  if (!user && !isAuthRoute && !isPublicRoute) {
+  if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
