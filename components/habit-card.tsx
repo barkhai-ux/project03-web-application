@@ -3,6 +3,7 @@ import { ArrowRight, Flame } from "lucide-react";
 import type { CheckInRow } from "@/lib/streaks";
 import { computeStreaks } from "@/lib/streaks";
 import { CheckInToggle } from "./check-in-toggle";
+import { CounterControl } from "./counter-control";
 
 interface Props {
   habit: {
@@ -14,10 +15,12 @@ interface Props {
   };
   checkIns: CheckInRow[];
   doneToday: boolean;
+  todayCount: number;
   timezone: string;
 }
 
-export function HabitCard({ habit, checkIns, doneToday, timezone }: Props) {
+export function HabitCard({ habit, checkIns, doneToday, todayCount, timezone }: Props) {
+  const isCounter = habit.target_per_period > 1;
   const { current, longest } = computeStreaks(
     checkIns,
     habit.period,
@@ -61,7 +64,11 @@ export function HabitCard({ habit, checkIns, doneToday, timezone }: Props) {
             "tag " + (doneToday ? "meeting" : habit.period === "day" ? "task" : "voice")
           }
         >
-          {doneToday ? "Done today" : cadenceLabel}
+          {doneToday
+            ? "Done today"
+            : isCounter
+              ? `${todayCount}/${habit.target_per_period} today`
+              : cadenceLabel}
         </span>
       </div>
 
@@ -83,12 +90,23 @@ export function HabitCard({ habit, checkIns, doneToday, timezone }: Props) {
         <Meta k="Best" v={`${longest} ${longest === 1 ? "day" : "days"}`} />
       </div>
 
-      <div className="flex items-center justify-between mt-3.5 pt-3.5 border-t border-dashed border-[color:var(--line-2)]">
-        <div className="flex items-center gap-2.5 text-[13px] text-[var(--ink-500)]">
-          <CheckInToggle habitId={habit.id} done={doneToday} color={habit.color} />
-          <span>{doneToday ? "Marked complete" : "Ready when you are"}</span>
-        </div>
-        <Link href={`/habits/${habit.id}`} className="btn-soft no-underline">
+      <div className="flex items-center justify-between mt-3.5 pt-3.5 border-t border-dashed border-[color:var(--line-2)] gap-3">
+        {isCounter ? (
+          <div className="flex-1 min-w-0">
+            <CounterControl
+              habitId={habit.id}
+              count={todayCount}
+              target={habit.target_per_period}
+              color={habit.color}
+            />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5 text-[13px] text-[var(--ink-500)]">
+            <CheckInToggle habitId={habit.id} done={doneToday} color={habit.color} />
+            <span>{doneToday ? "Marked complete" : "Ready when you are"}</span>
+          </div>
+        )}
+        <Link href={`/habits/${habit.id}`} className="btn-soft no-underline flex-shrink-0">
           View
           <ArrowRight size={12} />
         </Link>

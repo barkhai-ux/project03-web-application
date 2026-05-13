@@ -43,9 +43,12 @@ export function buildDigest(
   }
 
   const totalCount = habits.length;
-  const doneCount = habits.filter((h) =>
-    (byHabit.get(h.id) ?? []).some((c) => c.date === forDate),
-  ).length;
+  const doneCount = habits.filter((h) => {
+    const todayTotal = (byHabit.get(h.id) ?? [])
+      .filter((c) => c.date === forDate)
+      .reduce((s, c) => s + c.count, 0);
+    return todayTotal >= h.target_per_period;
+  }).length;
   const completionPct =
     totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 

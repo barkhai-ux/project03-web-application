@@ -44,9 +44,15 @@ export default async function DashboardPage() {
     byHabit.set(c.habit_id, arr);
   }
 
-  const totalToday = (habits ?? []).filter((h) =>
-    (byHabit.get(h.id) ?? []).some((c) => c.date === today),
-  ).length;
+  function todayCountFor(habitId: string): number {
+    return (byHabit.get(habitId) ?? [])
+      .filter((c) => c.date === today)
+      .reduce((s, c) => s + c.count, 0);
+  }
+  function isDoneToday(habit: { id: string; target_per_period: number }): boolean {
+    return todayCountFor(habit.id) >= habit.target_per_period;
+  }
+  const totalToday = (habits ?? []).filter((h) => isDoneToday(h)).length;
   const totalCount = habits?.length ?? 0;
   const pct = totalCount > 0 ? Math.round((totalToday / totalCount) * 100) : 0;
 
@@ -207,7 +213,8 @@ export default async function DashboardPage() {
                 <HabitCard
                   habit={h}
                   checkIns={byHabit.get(h.id) ?? []}
-                  doneToday={(byHabit.get(h.id) ?? []).some((c) => c.date === today)}
+                  doneToday={isDoneToday(h)}
+                  todayCount={todayCountFor(h.id)}
                   timezone={tz}
                 />
               </div>
