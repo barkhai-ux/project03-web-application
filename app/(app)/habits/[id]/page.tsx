@@ -8,6 +8,7 @@ import { Heatmap } from "@/components/heatmap";
 import { StatTile } from "@/components/stat-tile";
 import { CheckInToggle } from "@/components/check-in-toggle";
 import { CounterControl } from "@/components/counter-control";
+import { HabitEditPanel } from "@/components/habit-edit-panel";
 
 export default async function HabitDetailPage({
   params,
@@ -191,6 +192,18 @@ export default async function HabitDetailPage({
             </div>
 
             <Heatmap counts={counts} today={today} color={habit.color} weeks={26} />
+
+            <div className="mt-5 pt-4 border-t border-dashed border-[color:var(--line)]">
+              <HabitEditPanel
+                habit={{
+                  id: habit.id,
+                  name: habit.name,
+                  color: habit.color,
+                  period: habit.period,
+                  target_per_period: habit.target_per_period,
+                }}
+              />
+            </div>
           </div>
 
           <div className="card p-[18px_24px]">

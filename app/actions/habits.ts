@@ -13,7 +13,7 @@ const HabitSchema = z.object({
     .default("#10b981"),
   icon: z.string().trim().max(40).optional().or(z.literal("")),
   period: z.enum(["day", "week"]),
-  target_per_period: z.coerce.number().int().min(1).max(100).default(1),
+  target_per_period: z.coerce.number().int().min(1).max(1_000_000).default(1),
 });
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -53,6 +53,63 @@ export async function createHabit(
   revalidatePath("/habits");
   revalidatePath("/dashboard");
   return { ok: true };
+}
+
+export async function updateHabit(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const habitId = String(formData.get("habit_id") ?? "");
+  if (!habitId) return { ok: false, error: "Missing habit" };
+
+  const parsed = HabitSchema.safeParse({
+    name: formData.get("name"),
+    color: formData.get("color") || "#10b981",
+    icon: formData.get("icon") ?? "",
+    period: formData.get("period") || "day",
+    target_per_period: formData.get("target_per_period") ?? 1,
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not signed in" };
+
+  const { error } = await supabase
+    .from("habits")
+    .update({
+      name: parsed.data.name,
+      color: parsed.data.color,
+      period: parsed.data.period,
+      target_per_period: parsed.data.target_per_period,
+    })
+    .eq("id", habitId)
+    .eq("user_id", user.id);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/habits");
+  revalidatePath(`/habits/${habitId}`);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function deleteHabit(habitId: string): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  await supabase.from("habits").delete().eq("id", habitId).eq("user_id", user.id);
+
+  revalidatePath("/habits");
+  revalidatePath("/dashboard");
+  redirect("/habits");
 }
 
 export async function archiveHabit(habitId: string): Promise<void> {
