@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { HabitForm } from "@/components/habit-form";
 import { ArchiveButton } from "@/components/archive-button";
 import { VisibilityToggle } from "@/components/visibility-toggle";
+import { HabitPresets } from "@/components/habit-presets";
 
 export default async function HabitsPage() {
   const supabase = await createClient();
@@ -30,10 +31,12 @@ export default async function HabitsPage() {
             </p>
           </header>
 
+          <HabitPresets />
+
           {active.length === 0 ? (
             <div className="card p-12 text-center">
               <p className="serif-italic text-[24px] text-[var(--ink-500)]">
-                No habits yet. Begin on the right.
+                No habits yet. Pick a starter above or compose your own.
               </p>
             </div>
           ) : (

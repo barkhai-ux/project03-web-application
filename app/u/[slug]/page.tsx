@@ -51,11 +51,18 @@ export default async function PublicProfilePage({ params }: Props) {
 
   const aggregated: Record<string, number> = {};
   const byHabit = new Map<string, { date: string; count: number }[]>();
+  const todayCountByHabit = new Map<string, number>();
   for (const c of checkIns) {
     aggregated[c.date] = (aggregated[c.date] ?? 0) + c.count;
     const arr = byHabit.get(c.habit_id) ?? [];
     arr.push({ date: c.date, count: c.count });
     byHabit.set(c.habit_id, arr);
+    if (c.date === today) {
+      todayCountByHabit.set(
+        c.habit_id,
+        (todayCountByHabit.get(c.habit_id) ?? 0) + c.count,
+      );
+    }
   }
   const totalCheckIns = checkIns.length;
 
@@ -159,6 +166,28 @@ export default async function PublicProfilePage({ params }: Props) {
                     <div className="text-[12px] text-[var(--ink-500)] mt-2 small-caps">
                       {h.period === "day" ? "Daily" : "Weekly"} &middot; target {h.target_per_period}
                     </div>
+                    {h.target_per_period > 1 && (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-[12px] text-[var(--ink-500)] mb-1.5">
+                          <span className="tabular">
+                            <span style={{ color: h.color }} className="font-medium">
+                              {todayCountByHabit.get(h.id) ?? 0}
+                            </span>
+                            <span> / {h.target_per_period}</span>
+                          </span>
+                          <span className="small-caps">today</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-[var(--sand-200)] rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${Math.min(100, Math.round(((todayCountByHabit.get(h.id) ?? 0) / h.target_per_period) * 100))}%`,
+                              background: h.color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-dashed border-[color:var(--line)]">
                       <div>
                         <div className="serif-italic text-[26px] tracking-[-0.02em] leading-none">

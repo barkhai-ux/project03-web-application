@@ -7,6 +7,7 @@ import { addDays, todayInTz } from "@/lib/dates";
 import { Heatmap } from "@/components/heatmap";
 import { StatTile } from "@/components/stat-tile";
 import { CheckInToggle } from "@/components/check-in-toggle";
+import { CounterControl } from "@/components/counter-control";
 
 export default async function HabitDetailPage({
   params,
@@ -50,7 +51,9 @@ export default async function HabitDetailPage({
     tz,
   );
   const totalCheckIns = checkIns.reduce((s, c) => s + c.count, 0);
-  const doneToday = (counts[today] ?? 0) >= habit.target_per_period;
+  const todayCount = counts[today] ?? 0;
+  const doneToday = todayCount >= habit.target_per_period;
+  const isCounter = habit.target_per_period > 1;
 
   // Sibling list for picker
   const { data: siblings } = await supabase
@@ -136,18 +139,29 @@ export default async function HabitDetailPage({
                 <Link href="/habits" className="btn-soft no-underline">
                   Edit
                 </Link>
-                <div className="flex items-center gap-2.5 bg-[var(--ink-900)] text-[#fbf3e6] rounded-full pl-1.5 pr-4 py-1.5 text-[13px] font-medium">
-                  <CheckInToggle
-                    habitId={habit.id}
-                    done={doneToday}
-                    color={habit.color}
-                    size="sm"
-                  />
-                  <span>{doneToday ? "Done today" : "Mark today"}</span>
-                  {!doneToday && (
-                    <Check size={12} className="text-[var(--butter)]" />
-                  )}
-                </div>
+                {isCounter ? (
+                  <div className="bg-white border border-[color:var(--line)] rounded-2xl px-4 py-2 min-w-[180px]">
+                    <CounterControl
+                      habitId={habit.id}
+                      count={todayCount}
+                      target={habit.target_per_period}
+                      color={habit.color}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2.5 bg-[var(--ink-900)] text-[#fbf3e6] rounded-full pl-1.5 pr-4 py-1.5 text-[13px] font-medium">
+                    <CheckInToggle
+                      habitId={habit.id}
+                      done={doneToday}
+                      color={habit.color}
+                      size="sm"
+                    />
+                    <span>{doneToday ? "Done today" : "Mark today"}</span>
+                    {!doneToday && (
+                      <Check size={12} className="text-[var(--butter)]" />
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
