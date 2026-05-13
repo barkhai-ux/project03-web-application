@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Edit3, Mic, Plus, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { HabitCard } from "@/components/habit-card";
+import { DigestCard } from "@/components/digest-card";
 import { computeStreaks } from "@/lib/streaks";
 import { addDays, todayInTz } from "@/lib/dates";
 
@@ -61,6 +62,16 @@ export default async function DashboardPage() {
 
   const totalCheckIns = (checkIns ?? []).length;
   const mindfulHours = Math.round(((checkIns ?? []).length * 15) / 60);
+
+  const { data: latestDigest } = await supabase
+    .from("digests")
+    .select(
+      "for_date, completion_pct, done_count, total_count, longest_streak, message",
+    )
+    .eq("user_id", user.id)
+    .order("for_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   const firstName =
     profile?.display_name?.split(" ")[0] ??
@@ -206,6 +217,8 @@ export default async function DashboardPage() {
 
         {/* RIGHT */}
         <div className="flex flex-col gap-4 min-h-0">
+          <DigestCard digest={latestDigest ?? null} today={today} />
+
           <div className="card p-[18px]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 font-semibold text-[15px]">
