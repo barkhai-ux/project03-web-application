@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Edit3, Mic, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, Edit3, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { HabitCard } from "@/components/habit-card";
 import { DigestCard } from "@/components/digest-card";
@@ -80,20 +80,14 @@ export default async function DashboardPage() {
   }, 0);
 
   const totalCheckIns = (checkIns ?? []).length;
-  const mindfulHours = Math.round(((checkIns ?? []).length * 15) / 60);
+
+  const remainingToday = (habits ?? []).filter((h) => !isDoneToday(h));
 
   const firstName =
     profile?.display_name?.split(" ")[0] ??
     user.email?.split("@")[0] ??
     "you";
   const initial = firstName.charAt(0).toUpperCase();
-
-  const nudges = [
-    "Stretch your back during the 3pm slump",
-    "Step outside for ten minutes of sun",
-    "Tidy desk before closing the laptop",
-    "Drink a glass of water before coffee",
-  ];
 
   return (
     <div className="flex flex-col flex-1 min-h-0 animate-fade-up">
@@ -129,18 +123,6 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-[280px_1fr_320px] gap-5 px-7 pb-6 pt-1.5 flex-1 min-h-0 max-[1100px]:grid-cols-[240px_1fr_280px]">
         {/* LEFT */}
         <div className="flex flex-col gap-4 min-h-0">
-          <div className="flex items-center gap-3 bg-white/85 border border-[color:var(--line)] py-2.5 pr-3.5 pl-2.5 rounded-full">
-            <div className="w-9 h-9 rounded-full bg-[var(--butter)] grid place-items-center">
-              <Sparkles size={16} className="text-[var(--ink-700)]" />
-            </div>
-            <div className="flex-1">
-              <div className="font-semibold text-[14px]">Daily reset</div>
-              <div className="text-[11px] text-[var(--ink-500)]">
-                Health &amp; mindfulness
-              </div>
-            </div>
-          </div>
-
           <div className="card p-[22px_22px_24px]">
             <div
               className="text-[88px] leading-[0.95] tracking-[-0.04em] font-medium"
@@ -182,9 +164,9 @@ export default async function DashboardPage() {
             }}
           >
             <div className="flex justify-between items-center mb-3.5">
-              <div className="font-semibold text-[13px]">Weekly rhythm</div>
+              <div className="font-semibold text-[13px]">Your rhythm</div>
               <div className="bg-black/85 text-[var(--butter)] px-2.5 py-1 rounded-full text-[11px] font-medium">
-                Last 30 days
+                All time
               </div>
             </div>
             <div className="grid grid-cols-3 gap-1">
@@ -231,79 +213,61 @@ export default async function DashboardPage() {
 
           <div className="card p-[18px]">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 font-semibold text-[15px]">
-                <span className="w-6 h-6 rounded-md bg-[#ffe9d9] grid place-items-center text-[var(--terra)]">
-                  <Sparkles size={14} />
-                </span>
-                Gentle nudges
-              </div>
+              <div className="font-semibold text-[15px]">Still to go</div>
               <Link
                 href="/habits"
-                className="text-[13px] text-[var(--ink-700)] inline-flex items-center gap-1 font-medium no-underline hover:text-[var(--ink-900)]"
+                className="text-[12px] text-[var(--ink-700)] inline-flex items-center gap-1 font-medium no-underline hover:text-[var(--ink-900)]"
               >
-                <Plus size={12} /> Add
+                <Plus size={12} /> Add habit
               </Link>
             </div>
-            <div className="flex flex-col">
-              {nudges.map((t, i) => (
-                <div
-                  key={i}
-                  className="group flex items-center gap-2.5 py-3 border-b border-dashed border-[color:var(--line)] last:border-b-0 text-[13px] leading-[1.45] cursor-pointer"
-                >
-                  <div className="flex-1 text-[var(--ink-700)]">{t}</div>
-                  <span className="text-[var(--ink-400)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--ink-900)]">
-                    <ArrowRight size={14} />
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div
-            className="rounded-[var(--radius-card)] p-[16px_18px_18px] border"
-            style={{
-              background: "linear-gradient(160deg, #fff 0%, #f9f1e2 100%)",
-              borderColor: "rgba(255,255,255,0.7)",
-              boxShadow: "var(--shadow-card)",
-            }}
-          >
-            <span className="tag voice mb-2">Reflection</span>
-            <div className="text-[18px] font-medium tracking-[-0.01em] leading-[1.3] mt-2">
-              How did{" "}
-              <span className="serif-italic text-[21px]">today</span> feel?
-            </div>
-            <div className="flex items-center gap-3 mt-3">
-              <button
-                type="button"
-                aria-label="Record reflection"
-                className="w-9 h-9 rounded-full bg-[var(--ink-900)] text-[#fbf3e6] grid place-items-center flex-shrink-0"
-              >
-                <Mic size={16} />
-              </button>
-              <div className="flex-1 h-7 flex items-center gap-[2px]">
-                {Array.from({ length: 38 }).map((_, i) => {
-                  const h = 4 + Math.abs(Math.sin(i * 0.7)) * 22;
+            {remainingToday.length === 0 ? (
+              <p className="serif-italic text-[var(--ink-500)] text-[15px] py-3">
+                {totalCount === 0
+                  ? "Add a habit to begin tracking."
+                  : "Everything done today. Nice."}
+              </p>
+            ) : (
+              <ul className="flex flex-col">
+                {remainingToday.map((h) => {
+                  const c = todayCountFor(h.id);
                   return (
-                    <span
-                      key={i}
-                      className="block w-[2px] rounded-[1px] bg-[var(--ink-700)]"
-                      style={{ height: h, opacity: 0.45 + ((i % 5) / 12) }}
-                    />
+                    <li
+                      key={h.id}
+                      className="flex items-center gap-2.5 py-2.5 border-b border-dashed border-[color:var(--line)] last:border-b-0"
+                    >
+                      <span
+                        aria-hidden
+                        className="block w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ background: h.color }}
+                      />
+                      <Link
+                        href={`/habits/${h.id}`}
+                        className="text-[13px] no-underline ink flex-1 truncate hover:text-[var(--terra)]"
+                      >
+                        {h.name}
+                      </Link>
+                      <span className="text-[11px] text-[var(--ink-400)] tabular flex-shrink-0">
+                        {h.target_per_period > 1
+                          ? `${c}/${h.target_per_period}`
+                          : "todo"}
+                      </span>
+                    </li>
                   );
                 })}
-              </div>
-            </div>
-          </div>
-
-          <div className="text-right text-[12px] text-[var(--ink-500)]">
-            Longest run · <span className="serif-italic ink text-[14px]">{longestOverall}</span>
-            {mindfulHours > 0 && (
-              <>
-                {" · "}
-                {mindfulHours}h mindful
-              </>
+              </ul>
             )}
           </div>
+
+          {longestOverall > 0 && (
+            <div className="text-right text-[12px] text-[var(--ink-500)]">
+              Longest run ·{" "}
+              <span className="serif-italic ink text-[14px]">
+                {longestOverall}
+              </span>{" "}
+              days
+            </div>
+          )}
         </div>
       </div>
     </div>

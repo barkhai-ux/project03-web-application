@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell } from "lucide-react";
 import { LogoMark } from "./logo-mark";
 
 const TABS = [
@@ -52,10 +51,6 @@ export function TopNav() {
             Sign out
           </button>
         </form>
-        <button type="button" className="icon-btn" aria-label="Notifications">
-          <Bell size={16} />
-          <span className="dot" />
-        </button>
       </div>
     </div>
   );

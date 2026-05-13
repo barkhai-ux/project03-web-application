@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Check, Plus } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { computeStreaks } from "@/lib/streaks";
 import { addDays, todayInTz } from "@/lib/dates";
@@ -66,24 +66,19 @@ export default async function HabitDetailPage({
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-7 pb-7 pt-2 animate-fade-up">
       {/* Section header */}
-      <div className="flex items-baseline justify-between mb-4">
-        <div>
-          <Link
-            href="/habits"
-            className="inline-flex items-center gap-1.5 text-[12px] small-caps text-[var(--ink-400)] hover:text-[var(--ink-900)] no-underline"
-          >
-            <ArrowLeft size={12} /> Index
-          </Link>
-          <h2 className="mt-1 text-[22px] font-medium tracking-[-0.02em]">
-            <span className="serif-italic text-[26px]">A closer look</span> at your habit
-          </h2>
-          <div className="text-[var(--ink-500)] text-[13px] mt-1">
-            Streaks, reflections, and what&apos;s been working.
-          </div>
+      <div className="mb-4">
+        <Link
+          href="/habits"
+          className="inline-flex items-center gap-1.5 text-[12px] small-caps text-[var(--ink-400)] hover:text-[var(--ink-900)] no-underline"
+        >
+          <ArrowLeft size={12} /> Index
+        </Link>
+        <h2 className="mt-1 text-[22px] font-medium tracking-[-0.02em]">
+          <span className="serif-italic text-[26px]">A closer look</span> at your habit
+        </h2>
+        <div className="text-[var(--ink-500)] text-[13px] mt-1">
+          Streaks, history, and what&apos;s been working.
         </div>
-        <button type="button" className="btn-soft">
-          <Plus size={12} /> Add reflection
-        </button>
       </div>
 
       <div className="grid grid-cols-[240px_1fr] items-start gap-[18px]">
@@ -137,9 +132,6 @@ export default async function HabitDetailPage({
                 </div>
               </div>
               <div className="flex gap-2.5 flex-shrink-0 items-center">
-                <Link href="/habits" className="btn-soft no-underline">
-                  Edit
-                </Link>
                 {isCounter ? (
                   <div className="bg-white border border-[color:var(--line)] rounded-2xl px-4 py-2 min-w-[180px]">
                     <CounterControl
