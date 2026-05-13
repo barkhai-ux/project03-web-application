@@ -20,8 +20,17 @@ export default async function PublicProfilePage({ params }: Props) {
 
   if (!profile) notFound();
 
+  const { data: habits } = await supabase
+    .from("habits")
+    .select("id, name, color, period, target_per_period")
+    .eq("user_id", profile.id)
+    .eq("is_public", true)
+    .is("archived_at", null)
+    .order("created_at", { ascending: true });
+
   const name = profile.display_name ?? slug;
   const initial = name.charAt(0).toUpperCase();
+  const publicHabits = habits ?? [];
 
   return (
     <div className="relative flex min-h-screen items-start justify-center p-6 md:p-7">
@@ -62,11 +71,36 @@ export default async function PublicProfilePage({ params }: Props) {
               </Link>
             </div>
 
-            <div className="card p-8 text-center animate-fade-up">
-              <p className="serif-italic text-[22px] text-[var(--ink-500)]">
-                Their rituals will appear here soon.
-              </p>
-            </div>
+            {publicHabits.length === 0 ? (
+              <div className="card p-8 text-center animate-fade-up">
+                <p className="serif-italic text-[22px] text-[var(--ink-500)]">
+                  No public rituals yet.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {publicHabits.map((h, i) => (
+                  <div
+                    key={h.id}
+                    className="card p-6 animate-fade-up"
+                    style={{ animationDelay: `${i * 60}ms` }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="block w-3.5 h-3.5 rounded-full"
+                        style={{ backgroundColor: h.color }}
+                      />
+                      <div className="serif-italic text-[22px] leading-none">
+                        {h.name}
+                      </div>
+                    </div>
+                    <div className="text-[12px] text-[var(--ink-500)] mt-2 small-caps">
+                      {h.period === "day" ? "Daily" : "Weekly"} &middot; target {h.target_per_period}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </main>
         </div>
       </div>
