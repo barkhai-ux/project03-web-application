@@ -105,6 +105,43 @@ export async function decrementCheckInToday(habitId: string): Promise<void> {
   revalidatePath(`/habits/${habitId}`);
 }
 
+export async function setCheckInCountToday(
+  habitId: string,
+  count: number,
+): Promise<void> {
+  const { supabase, userId, today } = await authAndToday();
+
+  const safe = Math.max(0, Math.min(1_000_000, Math.floor(count)));
+
+  const { data: existing } = await supabase
+    .from("check_ins")
+    .select("id")
+    .eq("habit_id", habitId)
+    .eq("date", today)
+    .maybeSingle();
+
+  if (safe === 0) {
+    if (existing) {
+      await supabase.from("check_ins").delete().eq("id", existing.id);
+    }
+  } else if (existing) {
+    await supabase
+      .from("check_ins")
+      .update({ count: safe })
+      .eq("id", existing.id);
+  } else {
+    await supabase.from("check_ins").insert({
+      habit_id: habitId,
+      user_id: userId,
+      date: today,
+      count: safe,
+    });
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/habits/${habitId}`);
+}
+
 export async function setCheckInNote(
   habitId: string,
   date: string,
