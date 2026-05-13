@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LogoMark } from "@/components/logo-mark";
 import { Heatmap } from "@/components/heatmap";
 import { addDays, todayInTz } from "@/lib/dates";
+import { computeStreaks } from "@/lib/streaks";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -39,19 +40,39 @@ export default async function PublicProfilePage({ params }: Props) {
   const horizon = addDays(today, -190);
 
   const habitIds = publicHabits.map((h) => h.id);
-  const { data: checkIns } = habitIds.length
+  const { data: checkInsRaw } = habitIds.length
     ? await supabase
         .from("check_ins")
-        .select("date, count")
+        .select("habit_id, date, count")
         .in("habit_id", habitIds)
         .gte("date", horizon)
-    : { data: [] as { date: string; count: number }[] };
+    : { data: [] as { habit_id: string; date: string; count: number }[] };
+  const checkIns = checkInsRaw ?? [];
 
   const aggregated: Record<string, number> = {};
-  for (const c of checkIns ?? []) {
+  const byHabit = new Map<string, { date: string; count: number }[]>();
+  for (const c of checkIns) {
     aggregated[c.date] = (aggregated[c.date] ?? 0) + c.count;
+    const arr = byHabit.get(c.habit_id) ?? [];
+    arr.push({ date: c.date, count: c.count });
+    byHabit.set(c.habit_id, arr);
   }
-  const totalCheckIns = (checkIns ?? []).length;
+  const totalCheckIns = checkIns.length;
+
+  const habitStreaks = publicHabits.map((h) => {
+    const { current, longest } = computeStreaks(
+      byHabit.get(h.id) ?? [],
+      h.period,
+      h.target_per_period,
+      tz,
+    );
+    return { id: h.id, current, longest };
+  });
+  const streakMap = new Map(habitStreaks.map((s) => [s.id, s]));
+  const longestOverall = habitStreaks.reduce(
+    (max, s) => Math.max(max, s.longest),
+    0,
+  );
 
   return (
     <div className="relative flex min-h-screen items-start justify-center p-6 md:p-7">
@@ -82,6 +103,14 @@ export default async function PublicProfilePage({ params }: Props) {
                 <div className="serif-italic text-[36px] leading-none">{name}</div>
                 <div className="text-[var(--ink-500)] text-[13px] mt-2">
                   @{slug} &middot; {profile.timezone}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="serif-italic text-[34px] leading-none">
+                  {longestOverall}
+                </div>
+                <div className="text-[11px] text-[var(--ink-500)] mt-1 small-caps">
+                  Best run
                 </div>
               </div>
               <Link
@@ -129,6 +158,24 @@ export default async function PublicProfilePage({ params }: Props) {
                     </div>
                     <div className="text-[12px] text-[var(--ink-500)] mt-2 small-caps">
                       {h.period === "day" ? "Daily" : "Weekly"} &middot; target {h.target_per_period}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-dashed border-[color:var(--line)]">
+                      <div>
+                        <div className="serif-italic text-[26px] tracking-[-0.02em] leading-none">
+                          {streakMap.get(h.id)?.current ?? 0}
+                        </div>
+                        <div className="text-[11px] text-[var(--ink-500)] mt-0.5">
+                          Current streak
+                        </div>
+                      </div>
+                      <div>
+                        <div className="serif-italic text-[26px] tracking-[-0.02em] leading-none">
+                          {streakMap.get(h.id)?.longest ?? 0}
+                        </div>
+                        <div className="text-[11px] text-[var(--ink-500)] mt-0.5">
+                          Longest
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
