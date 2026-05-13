@@ -89,6 +89,30 @@ export async function unarchiveHabit(habitId: string): Promise<void> {
   revalidatePath("/dashboard");
 }
 
+export async function createHabitFromPreset(formData: FormData): Promise<void> {
+  const key = String(formData.get("preset") ?? "");
+  const { PRESETS } = await import("@/lib/presets");
+  const preset = PRESETS[key];
+  if (!preset) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  await supabase.from("habits").insert({
+    user_id: user.id,
+    name: preset.name,
+    color: preset.color,
+    period: preset.period,
+    target_per_period: preset.target_per_period,
+  });
+
+  revalidatePath("/habits");
+  revalidatePath("/dashboard");
+}
+
 export async function setHabitVisibility(
   habitId: string,
   isPublic: boolean,
