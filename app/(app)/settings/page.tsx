@@ -15,7 +15,12 @@ const COMMON_TZS = [
   "America/Los_Angeles",
 ];
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; error?: string }>;
+}) {
+  const sp = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -53,6 +58,27 @@ export default async function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {sp.ok && (
+        <div
+          className="card mb-4 px-5 py-3 flex items-center gap-3 border"
+          style={{ borderColor: "var(--moss-2)", background: "#f1f7ee" }}
+        >
+          <span className="tag meeting">Saved</span>
+          <span className="text-[13px] text-[var(--ink-700)]">
+            Preferences updated.
+          </span>
+        </div>
+      )}
+      {sp.error && (
+        <div
+          className="card mb-4 px-5 py-3 flex items-center gap-3 border"
+          style={{ borderColor: "var(--terra)", background: "#fdeee6" }}
+        >
+          <span className="tag voice">Issue</span>
+          <span className="text-[13px] text-[var(--ink-700)]">{sp.error}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-[18px]">
         {/* Profile card */}
