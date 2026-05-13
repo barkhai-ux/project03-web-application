@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { HabitForm } from "@/components/habit-form";
 import { ArchiveButton } from "@/components/archive-button";
+import { VisibilityToggle } from "@/components/visibility-toggle";
 
 export default async function HabitsPage() {
   const supabase = await createClient();
@@ -60,6 +61,7 @@ export default async function HabitsPage() {
                     </span>
                   </Link>
                   <div className="flex items-center gap-4">
+                    <VisibilityToggle habitId={h.id} isPublic={!!h.is_public} />
                     <ArchiveButton habitId={h.id} archived={false} />
                     <Link
                       href={`/habits/${h.id}`}
