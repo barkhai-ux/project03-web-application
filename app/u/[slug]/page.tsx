@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { LogoMark } from "@/components/logo-mark";
+import { Heatmap } from "@/components/heatmap";
+import { addDays, todayInTz } from "@/lib/dates";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -31,6 +33,25 @@ export default async function PublicProfilePage({ params }: Props) {
   const name = profile.display_name ?? slug;
   const initial = name.charAt(0).toUpperCase();
   const publicHabits = habits ?? [];
+
+  const tz = profile.timezone ?? "UTC";
+  const today = todayInTz(tz);
+  const horizon = addDays(today, -190);
+
+  const habitIds = publicHabits.map((h) => h.id);
+  const { data: checkIns } = habitIds.length
+    ? await supabase
+        .from("check_ins")
+        .select("date, count")
+        .in("habit_id", habitIds)
+        .gte("date", horizon)
+    : { data: [] as { date: string; count: number }[] };
+
+  const aggregated: Record<string, number> = {};
+  for (const c of checkIns ?? []) {
+    aggregated[c.date] = (aggregated[c.date] ?? 0) + c.count;
+  }
+  const totalCheckIns = (checkIns ?? []).length;
 
   return (
     <div className="relative flex min-h-screen items-start justify-center p-6 md:p-7">
@@ -70,6 +91,18 @@ export default async function PublicProfilePage({ params }: Props) {
                 <ArrowLeft size={12} /> Home
               </Link>
             </div>
+
+            {publicHabits.length > 0 && (
+              <div className="card p-7 animate-fade-up">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="serif-italic text-[22px]">Last 26 weeks</div>
+                  <div className="text-[12px] text-[var(--ink-500)] tabular">
+                    {totalCheckIns} check-ins
+                  </div>
+                </div>
+                <Heatmap counts={aggregated} today={today} color="#3e7a52" />
+              </div>
+            )}
 
             {publicHabits.length === 0 ? (
               <div className="card p-8 text-center animate-fade-up">
