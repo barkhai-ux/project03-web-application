@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { updateProfile } from "@/app/actions/profile";
+import { ShareLink } from "@/components/share-link";
 
 const COMMON_TZS = [
   "UTC",
@@ -129,6 +130,19 @@ export default async function SettingsPage() {
               </button>
             </div>
           </form>
+
+          {profile?.public_slug && (
+            <div className="card p-[18px_22px]">
+              <SectionTitle>Share</SectionTitle>
+              <div className="py-2">
+                <div className="text-[14px] font-medium">Your public folio</div>
+                <div className="text-[12px] text-[var(--ink-500)] mt-0.5">
+                  Anyone with this link can see habits you've marked public.
+                </div>
+                <ShareLink slug={profile.public_slug} />
+              </div>
+            </div>
+          )}
 
           <form action="/auth/sign-out" method="POST" className="card p-[18px_22px]">
             <SectionTitle>Account</SectionTitle>
