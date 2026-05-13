@@ -8,6 +8,7 @@ interface Props {
   today: string;
   color: string;
   weeks?: number;
+  onCellClick?: (date: string) => void;
 }
 
 const CELL = 14;
@@ -17,7 +18,7 @@ const PAD_TOP = 22;
 
 const TIERS = ["#e9dcc1", "#d8b97a", "#c69441", "#3e7a52", "#2d5a3d"];
 
-export function Heatmap({ counts, today, weeks = 26 }: Props) {
+export function Heatmap({ counts, today, weeks = 26, onCellClick }: Props) {
   const [hover, setHover] = useState<{
     date: string;
     count: number;
@@ -114,6 +115,8 @@ export function Heatmap({ counts, today, weeks = 26 }: Props) {
                   y,
                 })
               }
+              onClick={onCellClick ? () => onCellClick(c.date) : undefined}
+              style={onCellClick ? { cursor: "pointer" } : undefined}
             >
               <rect
                 x={x}

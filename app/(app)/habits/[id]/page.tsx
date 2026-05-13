@@ -4,11 +4,12 @@ import { ArrowLeft, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { computeStreaks } from "@/lib/streaks";
 import { addDays, todayInTz } from "@/lib/dates";
-import { Heatmap } from "@/components/heatmap";
+import { HeatmapEditor } from "@/components/heatmap-editor";
 import { StatTile } from "@/components/stat-tile";
 import { CheckInToggle } from "@/components/check-in-toggle";
 import { CounterControl } from "@/components/counter-control";
 import { HabitEditPanel } from "@/components/habit-edit-panel";
+import { NoteInput } from "@/components/note-input";
 
 export default async function HabitDetailPage({
   params,
@@ -48,6 +49,7 @@ export default async function HabitDetailPage({
     .order("date", { ascending: false });
 
   const checkIns = (rows ?? []).map((r) => ({ date: r.date, count: r.count }));
+  const todayNote = (rows ?? []).find((r) => r.date === today)?.note ?? "";
   const counts: Record<string, number> = {};
   for (const c of checkIns) counts[c.date] = (counts[c.date] ?? 0) + c.count;
 
@@ -176,7 +178,12 @@ export default async function HabitDetailPage({
             </div>
 
             <div className="flex items-baseline justify-between mb-2.5">
-              <div className="text-[13px] font-medium">Last 6 months</div>
+              <div>
+                <div className="text-[13px] font-medium">Last 6 months</div>
+                <div className="text-[11px] text-[var(--ink-400)] mt-0.5">
+                  Tap a day to log it
+                </div>
+              </div>
               <div className="flex items-center gap-2 text-[11px] text-[var(--ink-500)]">
                 <span>less</span>
                 <div className="flex gap-[3px]">
@@ -191,7 +198,20 @@ export default async function HabitDetailPage({
               </div>
             </div>
 
-            <Heatmap counts={counts} today={today} color={habit.color} weeks={26} />
+            <HeatmapEditor
+              habitId={habit.id}
+              counts={counts}
+              today={today}
+              color={habit.color}
+              target={habit.target_per_period}
+            />
+
+            <div className="mt-5 pt-4 border-t border-dashed border-[color:var(--line)]">
+              <div className="text-[11px] small-caps text-[var(--ink-400)] mb-2">
+                Note for today
+              </div>
+              <NoteInput habitId={habit.id} date={today} initialNote={todayNote} />
+            </div>
 
             <div className="mt-5 pt-4 border-t border-dashed border-[color:var(--line)]">
               <HabitEditPanel
