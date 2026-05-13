@@ -7,7 +7,8 @@ export async function updateSession(request: NextRequest) {
     pathname === "/" ||
     pathname.startsWith("/u/") ||
     pathname.startsWith("/login") ||
-    pathname.startsWith("/auth");
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/api/cron");
 
   // Public routes don't need the session refresh round-trip.
   if (isPublicRoute) return NextResponse.next({ request });
